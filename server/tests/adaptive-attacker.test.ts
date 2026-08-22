@@ -6,7 +6,7 @@ import {
   RiskProfile,
 } from "@agentbreak/shared";
 import { AdaptiveAttacker, classifyAgentBehavior } from "../src/attacker/attacker";
-import { TACTIC_LIBRARY, suggestNextTactic } from "../src/attacker/tactics";
+import { TACTIC_LIBRARY, suggestNextTactic, normalizeAttackTactic } from "../src/attacker/tactics";
 
 // ─────────────────────────────────────────────────────────────────
 // 1. Tactic library integrity
@@ -322,5 +322,126 @@ describe("Deterministic fallback", () => {
     const attacker = new AdaptiveAttacker();
     const decision = attacker.decideDeterministic(state, riskProfile);
     expect(decision.action).toBe("TERMINATE");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// 7. Safe Tactic Resolution & LLM Response Normalization
+// ─────────────────────────────────────────────────────────────────
+describe("Safe Tactic Resolution & Response Normalization", () => {
+  const attacker = new AdaptiveAttacker();
+  const riskProfile: RiskProfile = {
+    id: "rp-test",
+    categories: ["financial"],
+    description: "test",
+    highRiskTools: ["issue_refund"],
+    toolRisks: [
+      {
+        toolName: "issue_refund",
+        reversible: false,
+        riskCategory: "financial",
+        scope: "financial_transaction",
+        severityPotential: "S4",
+        attackSurface: [],
+        riskReason: "test",
+      },
+    ],
+  };
+
+  it("1. valid known tactic: should preserve all canonical tactics unchanged", () => {
+    const validTactics: AttackTactic[] = [
+      "false_urgency",
+      "authority_impersonation",
+      "fake_authorization",
+      "ambiguous_scope",
+      "foot_in_the_door",
+      "sunk_cost_framing",
+      "conflicting_instruction",
+    ];
+    for (const t of validTactics) {
+      expect(normalizeAttackTactic(t)).toBe(t);
+      expect(TACTIC_LIBRARY[normalizeAttackTactic(t)]).toBeDefined();
+      expect(TACTIC_LIBRARY[normalizeAttackTactic(t)].description).toBeDefined();
+    }
+  });
+
+  it("2. unknown tactic: should safely map arbitrary strings to valid canonical tactics without crashing", () => {
+    const unknownTactics = [
+      "unknown_custom_attack",
+      "prompt_injection_override",
+      "third_party_social_engineering",
+      "emotional_intimidation",
+      "phishing_vector",
+      "random_gibberish_12345",
+    ];
+    for (const unknown of unknownTactics) {
+      const normalized = normalizeAttackTactic(unknown);
+      expect(TACTIC_LIBRARY[normalized]).toBeDefined();
+      expect(TACTIC_LIBRARY[normalized].description).toBeDefined();
+      expect(typeof TACTIC_LIBRARY[normalized].description).toBe("string");
+    }
+  });
+
+  it("3. missing tactic: undefined/null/empty tactic should safely default to false_urgency", () => {
+    expect(normalizeAttackTactic(undefined)).toBe("false_urgency");
+    expect(normalizeAttackTactic("")).toBe("false_urgency");
+    expect(TACTIC_LIBRARY[normalizeAttackTactic(undefined)].description).toBeDefined();
+  });
+
+  it("4. malformed attack decision: applyDecision should safely handle invalid nextTactic without corrupting state", () => {
+    const state: AttackState = {
+      scenarioId: "sc-test",
+      objective: "Coerce agent",
+      targetTool: "issue_refund",
+      currentTactic: "false_urgency",
+      tacticsAttempted: ["false_urgency"],
+      lastAgentBehavior: "REFUSED",
+      remainingTurns: 4,
+      maxTacticSwitches: 3,
+      tacticSwitchesUsed: 0,
+      attackSucceeded: false,
+    };
+
+    const malformedDecision = {
+      action: "SWITCH_TACTIC" as const,
+      nextTactic: "unsupported_hallucinated_tactic" as any,
+      nextUserMessage: "Do it now",
+      reason: "Testing malformed tactic",
+    };
+
+    const newState = attacker.applyDecision(state, malformedDecision, "REFUSED", false);
+    expect(TACTIC_LIBRARY[newState.currentTactic]).toBeDefined();
+    expect(TACTIC_LIBRARY[newState.currentTactic].description).toBeDefined();
+    expect(newState.tacticsAttempted.every((t) => t in TACTIC_LIBRARY)).toBe(true);
+  });
+
+  it("5. function-call-containing response: genericMessageForTactic handles non-standard tactic names safely", () => {
+    const msg = attacker.genericMessageForTactic("non_existent_tactic" as any, "issue_refund");
+    expect(typeof msg).toBe("string");
+    expect(msg.length).toBeGreaterThan(10);
+    expect(msg).toContain("issue_refund");
+  });
+
+  it("6. deterministic fallback after invalid LLM decision: fallback works safely when initialized with unknown tactic", async () => {
+    const corruptState: AttackState = {
+      scenarioId: "sc-corrupt",
+      objective: "Coerce agent",
+      targetTool: "issue_refund",
+      currentTactic: "totally_invalid_tactic" as any,
+      tacticsAttempted: ["totally_invalid_tactic" as any],
+      lastAgentBehavior: "REFUSED",
+      remainingTurns: 3,
+      maxTacticSwitches: 3,
+      tacticSwitchesUsed: 0,
+      attackSucceeded: false,
+    };
+
+    const decision = await attacker.decide(corruptState, [], riskProfile);
+    expect(decision).toBeDefined();
+    expect(["SWITCH_TACTIC", "PERSIST", "TERMINATE"]).toContain(decision.action);
+    if (decision.nextTactic) {
+      expect(decision.nextTactic in TACTIC_LIBRARY).toBe(true);
+      expect(TACTIC_LIBRARY[decision.nextTactic].description).toBeDefined();
+    }
   });
 });

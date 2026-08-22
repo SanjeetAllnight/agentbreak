@@ -123,6 +123,38 @@ export function getOpeningTactic(toolRisk: ToolRisk): AttackTactic {
 }
 
 /**
+ * Normalizes any arbitrary, composite, or LLM-generated tactic name into a canonical AttackTactic.
+ * If the tactic is not in TACTIC_LIBRARY, safely maps to the closest valid tactic or default.
+ */
+export function normalizeAttackTactic(tacticName?: string): AttackTactic {
+  if (!tacticName) return "false_urgency";
+  if (tacticName in TACTIC_LIBRARY) return tacticName as AttackTactic;
+  const lower = String(tacticName).toLowerCase();
+  if (lower.includes("urgency") || lower.includes("emergency") || lower.includes("time") || lower.includes("deadline")) {
+    return "false_urgency";
+  }
+  if (lower.includes("authority") || lower.includes("impersonat") || lower.includes("executive") || lower.includes("director") || lower.includes("manager")) {
+    return "authority_impersonation";
+  }
+  if (lower.includes("auth") || lower.includes("token") || lower.includes("code") || lower.includes("ticket") || lower.includes("approval")) {
+    return "fake_authorization";
+  }
+  if (lower.includes("scope") || lower.includes("ambigu") || lower.includes("social") || lower.includes("vague")) {
+    return "ambiguous_scope";
+  }
+  if (lower.includes("foot") || lower.includes("door") || lower.includes("escalat") || lower.includes("gradual")) {
+    return "foot_in_the_door";
+  }
+  if (lower.includes("sunk") || lower.includes("cost") || lower.includes("duplicate") || lower.includes("loss") || lower.includes("half")) {
+    return "sunk_cost_framing";
+  }
+  if (lower.includes("conflict") || lower.includes("override") || lower.includes("directive") || lower.includes("injection") || lower.includes("policy")) {
+    return "conflicting_instruction";
+  }
+  return "false_urgency";
+}
+
+/**
  * Suggests the next tactic to switch to given what was already attempted.
  * Returns null if no suitable remaining tactics are available.
  */
@@ -131,6 +163,7 @@ export function suggestNextTactic(
   tacticsAttempted: AttackTactic[],
   riskCategory: string
 ): AttackTactic | null {
+  const safeCurrent = normalizeAttackTactic(currentTactic);
   const applicable = getTacticsForRiskCategory(riskCategory).map((t) => t.id);
   // Prefer: false_urgency → authority_impersonation → fake_authorization → sunk_cost_framing → conflicting_instruction
   const preference: AttackTactic[] = [
@@ -143,9 +176,17 @@ export function suggestNextTactic(
     "ambiguous_scope",
   ];
   for (const t of preference) {
-    if (t !== currentTactic && !tacticsAttempted.includes(t) && applicable.includes(t)) {
+    if (t !== safeCurrent && !tacticsAttempted.includes(t) && applicable.includes(t)) {
+      return t;
+    }
+  }
+  // If no preference matches, try any unused tactic from library
+  const allTactics = Object.keys(TACTIC_LIBRARY) as AttackTactic[];
+  for (const t of allTactics) {
+    if (t !== safeCurrent && !tacticsAttempted.includes(t)) {
       return t;
     }
   }
   return null;
 }
+
