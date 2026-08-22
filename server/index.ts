@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { serveStatic } from "hono/bun";
 import { getTraces, getVerdicts, getRepairs } from "./db";
 import { AuditService } from "./src/audit/service";
 import { RepairService } from "./src/repair/repair-service";
@@ -121,6 +122,10 @@ app.post("/api/repair", async (c) => {
     );
   }
 });
+
+// ── Static Frontend Serving (Production) ──────────────────────────────────────
+app.use("/*", serveStatic({ root: "../web/dist" }));
+app.get("*", serveStatic({ path: "../web/dist/index.html" }));
 
 const port = parseInt(process.env.PORT || "3000");
 

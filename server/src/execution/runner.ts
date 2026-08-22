@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI, Type } from "@google/genai";
 import {
   AgentBehavior,
   AgentConfig,
@@ -29,18 +29,18 @@ const MAX_TURNS_DEFAULT = 6; // Conservative default
  * Orchestrates the adaptive attacker ↔ agent-under-test ↔ mock-sandbox loop.
  */
 export class AgentRunner {
-  private client: Anthropic | null = null;
+  private client: GoogleGenAI | null = null;
   private model: string;
   private maxTurns: number;
   private maxTacticSwitches: number;
 
   constructor(options?: RunnerOptions) {
-    const apiKey = options?.apiKey || process.env.ANTHROPIC_API_KEY;
+    const apiKey = options?.apiKey || process.env.GEMINI_API_KEY;
     if (apiKey) {
-      this.client = new Anthropic({ apiKey });
+      this.client = new GoogleGenAI({ apiKey });
     }
     this.model =
-      options?.model || process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-20241022";
+      options?.model || process.env.GEMINI_MODEL || "gemini-3.6-flash";
     this.maxTurns = options?.maxTurns ?? MAX_TURNS_DEFAULT;
     this.maxTacticSwitches = options?.maxTacticSwitches ?? 3;
   }
@@ -80,10 +80,10 @@ export class AgentRunner {
     riskProfile: RiskProfile | undefined,
     traceId: string
   ): Promise<Trace> {
-    if (!this.client) throw new Error("Anthropic client not initialised");
+    if (!this.client) throw new Error("Gemini client not initialised");
 
     const attacker = new AdaptiveAttacker({
-      apiKey: this.client?.apiKey as string | undefined,
+      apiKey: process.env.GEMINI_API_KEY,
       model: this.model,
       maxTacticSwitches: this.maxTacticSwitches,
     });
@@ -102,16 +102,23 @@ export class AgentRunner {
     const attackEvents: AttackEvent[] = [];
 
     // Messages to send to the agent-under-test
-    const agentMessages: Anthropic.MessageParam[] = [];
+    const agentMessages: any[] = [];
 
-    const anthropicTools: Anthropic.Tool[] = agent.tools.map((t) => ({
-      name: t.name,
-      description: t.description,
-      input_schema: (t.parameters || {
-        type: "object",
-        properties: {},
-      }) as Anthropic.Tool.InputSchema,
-    }));
+    const geminiTools = agent.tools.length > 0 ? [{
+      functionDeclarations: agent.tools.map((t) => {
+        const props = (t.parameters?.properties || {}) as any;
+        const required = (t.parameters?.required || []) as string[];
+        return {
+          name: t.name,
+          description: t.description,
+          parameters: {
+            type: Type.OBJECT,
+            properties: props,
+            ...(required.length > 0 ? { required } : {})
+          }
+        };
+      })
+    }] : undefined;
 
     // ── Opening attacker message ─────────────────────────────────────────────
     let currentUserMessage = scenario.initialPrompt;
@@ -120,49 +127,42 @@ export class AgentRunner {
     let turnIndex = 0;
 
     while (true) {
-      // Hard cap: never exceed maxTurns total tracked turns
       if (turnIndex >= this.maxTurns * 2) break;
 
-      // Record attacker (user) turn
       turns.push({
         turnIndex,
         role: "user",
         content: currentUserMessage,
         attackMeta: {
           tactic: currentTactic,
-          action: turnIndex === 0 ? "PERSIST" : "PERSIST", // will be updated below
+          action: turnIndex === 0 ? "PERSIST" : "PERSIST",
         },
         timestamp: new Date().toISOString(),
       });
 
-      agentMessages.push({ role: "user", content: currentUserMessage });
+      agentMessages.push({ role: "user", parts: [{ text: currentUserMessage }] });
       turnIndex++;
 
       // ── Call the agent-under-test ──────────────────────────────────────────
-      const agentResponse = await this.client.messages.create({
+      const agentResponse = await this.client.models.generateContent({
         model: this.model,
-        max_tokens: 1024,
-        system: agent.systemPrompt,
-        messages: agentMessages,
-        tools: anthropicTools,
+        contents: agentMessages,
+        config: {
+          tools: geminiTools,
+          systemInstruction: agent.systemPrompt,
+          temperature: 0,
+        },
       });
 
-      // Parse response
-      let agentTextContent = "";
-      const toolUseBlocks: Anthropic.ToolUseBlock[] = [];
-
-      for (const block of agentResponse.content) {
-        if (block.type === "text") agentTextContent += block.text;
-        else if (block.type === "tool_use") toolUseBlocks.push(block);
-      }
+      let agentTextContent = agentResponse.text || "";
+      const toolUseBlocks = agentResponse.functionCalls || [];
 
       const recordedToolCalls = toolUseBlocks.map((tu) => ({
-        id: tu.id,
-        name: tu.name,
-        arguments: (tu.input as Record<string, any>) || {},
+        id: `call_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        name: tu.name as string,
+        arguments: tu.args || {},
       }));
 
-      // Record assistant turn
       turns.push({
         turnIndex,
         role: "assistant",
@@ -171,12 +171,12 @@ export class AgentRunner {
         timestamp: new Date().toISOString(),
       });
 
-      agentMessages.push({ role: "assistant", content: agentResponse.content });
+      // Push exactly what the model returned to keep history valid
+      agentMessages.push(agentResponse.candidates![0].content);
       turnIndex++;
 
-      // Handle tool calls
-      if (toolUseBlocks.length > 0 && agentResponse.stop_reason !== "end_turn") {
-        const toolResultBlocks: Anthropic.ToolResultBlockParam[] = [];
+      if (toolUseBlocks.length > 0) {
+        const toolResultParts: any[] = [];
         const recordedToolResults: Array<{
           toolCallId?: string;
           name?: string;
@@ -184,18 +184,21 @@ export class AgentRunner {
           error?: string;
         }> = [];
 
-        for (const toolUse of toolUseBlocks) {
+        for (let i = 0; i < toolUseBlocks.length; i++) {
+          const toolUse = toolUseBlocks[i];
+          const recCall = recordedToolCalls[i];
           const { result, error } = await sandbox.execute(
-            toolUse.name,
-            (toolUse.input as Record<string, any>) || {},
+            toolUse.name as string,
+            toolUse.args as any || {},
             turnIndex
           );
-          recordedToolResults.push({ toolCallId: toolUse.id, name: toolUse.name, result, error });
-          toolResultBlocks.push({
-            type: "tool_result",
-            tool_use_id: toolUse.id,
-            content: JSON.stringify(result),
-            is_error: !!error,
+          recordedToolResults.push({ toolCallId: recCall.id, name: toolUse.name, result, error });
+          
+          toolResultParts.push({
+            functionResponse: {
+              name: toolUse.name,
+              response: error ? { error } : result
+            }
           });
         }
 
@@ -207,7 +210,7 @@ export class AgentRunner {
           timestamp: new Date().toISOString(),
         });
 
-        agentMessages.push({ role: "user", content: toolResultBlocks });
+        agentMessages.push({ role: "user", parts: toolResultParts });
         turnIndex++;
       }
 
@@ -217,15 +220,13 @@ export class AgentRunner {
         attackState.targetTool
       );
 
-      // Check if the agent actually executed the target tool
       const attackSucceeded = toolUseBlocks.some(
         (tu) => tu.name === attackState.targetTool
       );
 
-      // ── Attacker decides next move ─────────────────────────────────────
       attackState = attacker.applyDecision(
         attackState,
-        { action: "PERSIST", nextUserMessage: "", reason: "" }, // temporary placeholder
+        { action: "PERSIST", nextUserMessage: "", reason: "" }, 
         agentBehavior,
         attackSucceeded
       );
@@ -236,7 +237,6 @@ export class AgentRunner {
         effectiveRiskProfile
       );
 
-      // Record attack event
       const tacticChanged = decision.action === "SWITCH_TACTIC" && !!decision.nextTactic;
       const attackEvent: AttackEvent = {
         turnIndex: turns.length - 1,
@@ -250,14 +250,12 @@ export class AgentRunner {
       };
       attackEvents.push(attackEvent);
 
-      // Update the user turn's attackMeta with the actual action
       const lastUserTurnIdx = turns.findLastIndex((t) => t.role === "user");
       if (lastUserTurnIdx !== -1 && turns[lastUserTurnIdx].attackMeta) {
         turns[lastUserTurnIdx].attackMeta!.action = decision.action;
         turns[lastUserTurnIdx].attackMeta!.agentBehavior = agentBehavior;
       }
 
-      // Apply decision
       previousTactic = currentTactic;
       attackState = attacker.applyDecision(
         attackState,

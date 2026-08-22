@@ -1,4 +1,6 @@
 import { Database } from "bun:sqlite";
+import { dirname } from "path";
+import { mkdirSync } from "fs";
 import {
   CandidateAgentConfig,
   JudgeVerdict,
@@ -8,8 +10,35 @@ import {
   Trace,
 } from "@agentbreak/shared";
 
-// Do not over-engineer the database. Simple wrapper.
-export const db = new Database("agentbreak.sqlite", { create: true });
+const defaultDbPath =
+  process.env.NODE_ENV === "production"
+    ? "/data/agentbreak.sqlite"
+    : "agentbreak.sqlite";
+
+let resolvedDbPath = process.env.DATABASE_PATH || defaultDbPath;
+
+// Auto-create parent directory if path specifies a directory
+const dir = dirname(resolvedDbPath);
+if (dir && dir !== "." && dir !== "") {
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch (err) {
+    console.warn(`Could not create directory "${dir}" for database: ${err}. Falling back to local database path.`);
+    resolvedDbPath = "agentbreak.sqlite";
+  }
+}
+
+let dbInstance: Database;
+try {
+  dbInstance = new Database(resolvedDbPath, { create: true });
+} catch (err) {
+  console.warn(`Failed to open database at "${resolvedDbPath}": ${err}. Falling back to "agentbreak.sqlite".`);
+  resolvedDbPath = "agentbreak.sqlite";
+  dbInstance = new Database(resolvedDbPath, { create: true });
+}
+
+export const databasePath = resolvedDbPath;
+export const db = dbInstance;
 
 export function initializeDatabase() {
   db.run(`

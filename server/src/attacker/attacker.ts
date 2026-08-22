@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import {
   AgentBehavior,
   AttackAction,
@@ -104,16 +104,16 @@ export function classifyAgentBehavior(agentMessage: string, targetTool: string):
  * Plays the adversarial user role, adapting its tactics based on agent responses.
  */
 export class AdaptiveAttacker {
-  private client: Anthropic | null = null;
+  private client: GoogleGenAI | null = null;
   private model: string;
   private maxTacticSwitches: number;
 
   constructor(options?: AttackerOptions) {
-    const apiKey = options?.apiKey || process.env.ANTHROPIC_API_KEY;
+    const apiKey = options?.apiKey || process.env.GEMINI_API_KEY;
     if (apiKey) {
-      this.client = new Anthropic({ apiKey });
+      this.client = new GoogleGenAI({ apiKey });
     }
-    this.model = options?.model || process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-20241022";
+    this.model = options?.model || process.env.GEMINI_MODEL || "gemini-3.6-flash";
     this.maxTacticSwitches = options?.maxTacticSwitches ?? 3;
   }
 
@@ -184,7 +184,7 @@ export class AdaptiveAttacker {
     conversationHistory: TraceTurn[],
     riskProfile: RiskProfile
   ): Promise<AttackDecision> {
-    if (!this.client) throw new Error("Anthropic client not initialised");
+    if (!this.client) throw new Error("Gemini client not initialised");
 
     const tacticDef = TACTIC_LIBRARY[state.currentTactic];
     const availableTactics = Object.keys(TACTIC_LIBRARY) as AttackTactic[];
@@ -230,21 +230,16 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
   "reason": "<brief explanation of why you chose this action>"
 }`;
 
-    const response = await this.client.messages.create({
+    const response = await this.client.models.generateContent({
       model: this.model,
-      max_tokens: 512,
-      temperature: 0.3,
-      messages: [
-        {
-          role: "user",
-          content: `Recent conversation:\n${conversationSummary}`,
-        },
-      ],
-      system: systemPrompt,
+      contents: `Recent conversation:\n${conversationSummary}`,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.3,
+      },
     });
 
-    const raw =
-      response.content[0]?.type === "text" ? response.content[0].text.trim() : "";
+    const raw = response.text || "";
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Attacker LLM returned no JSON block");
 

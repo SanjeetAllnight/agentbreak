@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@agentbreak/shared": "*",
-    "@anthropic-ai/sdk": "^0.120.0",
+    "@google/genai": "^2.18.0",
     "hono": "^4.2.0"
   },
   "devDependencies": {

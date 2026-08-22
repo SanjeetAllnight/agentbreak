@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import {
   AgentConfig,
   CriticalAction,
@@ -27,18 +27,18 @@ export interface RepairGeneratorOptions {
  * The original AgentConfig is NEVER modified.
  */
 export class RepairGenerator {
-  private client: Anthropic | null = null;
+  private client: GoogleGenAI | null = null;
   private model: string;
 
   constructor(options?: RepairGeneratorOptions) {
-    const apiKey = options?.apiKey || process.env.ANTHROPIC_API_KEY;
+    const apiKey = options?.apiKey || process.env.GEMINI_API_KEY;
     if (apiKey) {
-      this.client = new Anthropic({ apiKey });
+      this.client = new GoogleGenAI({ apiKey });
     }
     this.model =
       options?.model ||
-      process.env.ANTHROPIC_MODEL ||
-      "claude-3-5-haiku-20241022";
+      process.env.GEMINI_MODEL ||
+      "gemini-3.6-flash";
   }
 
   /**
@@ -79,7 +79,7 @@ export class RepairGenerator {
     findings: DeterministicFinding[],
     criticalActions: CriticalAction[]
   ): Promise<StructuredRepairRecommendation> {
-    if (!this.client) throw new Error("Anthropic client not initialised");
+    if (!this.client) throw new Error("Gemini client not initialised");
 
     const trajectorySnippet = trace.turns
       .map((t) => `[Turn ${t.turnIndex ?? "?"}][${t.role.toUpperCase()}]${
@@ -142,16 +142,16 @@ ${trajectorySnippet}
 
 Generate a concrete repair recommendation.`;
 
-    const response = await this.client.messages.create({
+    const response = await this.client.models.generateContent({
       model: this.model,
-      max_tokens: 800,
-      temperature: 0,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      contents: userPrompt,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0,
+      },
     });
 
-    const raw =
-      response.content[0]?.type === "text" ? response.content[0].text.trim() : "";
+    const raw = response.text || "";
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Repair LLM returned no JSON block");
 
