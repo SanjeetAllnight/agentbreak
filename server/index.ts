@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serveStatic } from "hono/bun";
+import { resolve, join } from "path";
+import { existsSync } from "fs";
 import { getTraces, getVerdicts, getRepairs } from "./db";
 import { AuditService } from "./src/audit/service";
 import { RepairService } from "./src/repair/repair-service";
@@ -124,8 +126,29 @@ app.post("/api/repair", async (c) => {
 });
 
 // ── Static Frontend Serving (Production) ──────────────────────────────────────
-app.use("/*", serveStatic({ root: "../web/dist" }));
-app.get("*", serveStatic({ path: "../web/dist/index.html" }));
+const candidatePaths = [
+  resolve(import.meta.dir, "../web/dist"),
+  resolve(process.cwd(), "web/dist"),
+  resolve(process.cwd(), "../web/dist"),
+  "/app/web/dist",
+];
+
+const distDir = candidatePaths.find((p) => existsSync(p)) || resolve(import.meta.dir, "../web/dist");
+const indexPath = join(distDir, "index.html");
+
+console.log(`Static frontend root: ${distDir} (index.html exists: ${existsSync(indexPath)})`);
+
+// Serve static assets from dist
+app.use("/*", serveStatic({ root: distDir }));
+
+// SPA fallback: return index.html for all non-API GET routes
+app.get("*", async (c) => {
+  const indexFile = Bun.file(indexPath);
+  if (await indexFile.exists()) {
+    return c.html(await indexFile.text());
+  }
+  return c.text("Not Found", 404);
+});
 
 const port = parseInt(process.env.PORT || "3000");
 
@@ -134,7 +157,7 @@ console.log(`Server starting on port ${port}...`);
 export default {
   port,
   fetch(request: Request, server: any) {
-    if (server.upgrade(request)) {
+    if (server?.upgrade(request)) {
       return; // upgraded to WS
     }
     return app.fetch(request, server);
