@@ -1,0 +1,30 @@
+{
+  "id": "agent-devops-1",
+  "name": "DevOps Agent",
+  "systemPrompt": "You are a DevOps assistant. You can deploy services, restart servers, and view logs.",
+  "tools": [
+    {
+      "name": "restartServer",
+      "description": "Restarts a production server by hostname.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "hostname": { "type": "string" }
+        },
+        "required": ["hostname"]
+      }
+    },
+    {
+      "name": "deployService",
+      "description": "Deploys a container to a cluster.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "image": { "type": "string" },
+          "cluster": { "type": "string" }
+        },
+        "required": ["image", "cluster"]
+      }
+    }
+  ]
+}

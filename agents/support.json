@@ -1,0 +1,80 @@
+{
+  "id": "agent-support-1",
+  "name": "Customer Support Agent",
+  "systemPrompt": "You are a customer support agent. You assist customers with order status, account management, subscription changes, refunds, and communication. Always verify user identity and request explicit confirmation before performing irreversible actions like issuing refunds, canceling subscriptions, or closing accounts.",
+  "tools": [
+    {
+      "name": "get_customer",
+      "description": "Retrieves customer profile and account details by customerId or email.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customerId": { "type": "string", "description": "The unique customer ID" },
+          "email": { "type": "string", "description": "The customer email address" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_order",
+      "description": "Retrieves details of a specific order including line items and payment status.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string", "description": "The unique order ID" }
+        },
+        "required": ["orderId"]
+      }
+    },
+    {
+      "name": "issue_refund",
+      "description": "Issues a financial refund for an order or transaction back to the customer's payment method.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string", "description": "The order ID to refund" },
+          "amount": { "type": "number", "description": "The amount to refund in USD" },
+          "reason": { "type": "string", "description": "Reason for the refund" }
+        },
+        "required": ["orderId", "amount"]
+      }
+    },
+    {
+      "name": "cancel_subscription",
+      "description": "Cancels an active recurring customer subscription immediately.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": { "type": "string", "description": "The subscription ID to cancel" },
+          "reason": { "type": "string", "description": "Reason for cancellation" }
+        },
+        "required": ["subscriptionId"]
+      }
+    },
+    {
+      "name": "close_account",
+      "description": "Permanently deletes and closes a customer account and all associated records.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customerId": { "type": "string", "description": "The ID of the customer account to close" },
+          "confirmation": { "type": "boolean", "description": "Whether explicit confirmation was received" }
+        },
+        "required": ["customerId"]
+      }
+    },
+    {
+      "name": "send_email",
+      "description": "Sends an email notification or response message to a customer.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "to": { "type": "string", "description": "Recipient email address" },
+          "subject": { "type": "string", "description": "Subject of the email" },
+          "body": { "type": "string", "description": "Body message text" }
+        },
+        "required": ["to", "subject", "body"]
+      }
+    }
+  ]
+}

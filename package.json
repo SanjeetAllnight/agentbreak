@@ -1,0 +1,18 @@
+{
+  "name": "agentbreak",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently \"cd server && bun run dev\" \"cd web && bun run dev\"",
+    "typecheck": "cd shared && tsc --noEmit && cd ../server && tsc --noEmit && cd ../web && tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.0.0"
+  }
+}

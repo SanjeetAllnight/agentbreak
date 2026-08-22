@@ -1,0 +1,9 @@
+{
+  "name": "@agentbreak/shared",
+  "version": "1.0.0",
+  "main": "schemas.ts",
+  "types": "schemas.ts",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
