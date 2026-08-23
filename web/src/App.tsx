@@ -5,6 +5,7 @@ import { ShieldAlert, Info, Server } from 'lucide-react';
 import { MOCK_AUDIT_RESULT, MOCK_DEVOPS_AUDIT_RESULT, MOCK_REPAIR_RESULT } from './fixtures/mockData';
 import { AuditResult, RepairVerificationResult } from '@agentbreak/shared';
 import { runAudit, runRepair } from './api';
+import { Background3D } from './components/Background3D';
 
 function App() {
   const [state, setState] = useState<AuditState>('IDLE');
@@ -96,20 +97,22 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-agentbreak-darker text-slate-200 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen flex flex-col text-slate-200 selection:bg-blue-600 selection:text-white relative overflow-hidden">
+      <Background3D />
+      
       {/* Global Header */}
-      <header className="border-b border-slate-800 bg-agentbreak-panel/90 backdrop-blur px-6 py-3.5 flex justify-between items-center sticky top-0 z-50">
+      <header className="border-b border-slate-700/50 bg-agentbreak-panel/60 backdrop-blur-md px-6 py-3.5 flex justify-between items-center sticky top-0 z-50 shadow-lg transition-all duration-300">
         <div
           className="flex items-center gap-2.5 cursor-pointer group"
           onClick={handleRunNewAudit}
         >
-          <div className="p-1.5 bg-blue-950/80 rounded border border-blue-800/60 group-hover:border-agentbreak-primary transition">
+          <div className="p-1.5 bg-blue-950/80 rounded border border-blue-800/60 group-hover:border-agentbreak-primary group-hover:shadow-glow-primary transition-all duration-300">
             <ShieldAlert className="w-5 h-5 text-agentbreak-primary" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-wider uppercase text-white flex items-center gap-2">
               <span>AgentBreak</span>
-              <span className="text-[10px] font-mono font-normal bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 border border-slate-700">
+              <span className="text-[10px] font-mono font-normal bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-400 border border-slate-700/50 shadow-sm">
                 v1.0-audit
               </span>
             </h1>
@@ -120,12 +123,12 @@ function App() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-xs font-mono">
             {demoMode ? (
-              <span className="badge bg-amber-950/60 text-amber-400 border border-amber-500/40 flex items-center gap-1">
+              <span className="badge bg-amber-950/60 text-amber-400 border border-amber-500/40 flex items-center gap-1 shadow-glow-s2/20">
                 <Info className="w-3 h-3" />
                 DEMO MODE (FIXTURES)
               </span>
             ) : (
-              <span className="badge bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
+              <span className="badge bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1 shadow-glow-s0/20">
                 <Server className="w-3 h-3" />
                 LIVE MODE (PORT 3000)
               </span>
@@ -134,11 +137,10 @@ function App() {
 
           <button
             onClick={() => setDemoMode(!demoMode)}
-            className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all ${
-              demoMode
+            className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all duration-300 shadow-sm hover:shadow-glow-primary/30 ${demoMode
                 ? 'bg-amber-950/40 text-amber-300 border-amber-700/60 hover:bg-amber-900/60'
-                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-            }`}
+                : 'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700/80'
+              }`}
           >
             Switch to {demoMode ? 'Live Mode' : 'Demo Mode'}
           </button>
@@ -146,7 +148,7 @@ function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full z-10 animate-fade-in-up">
         {state === 'IDLE' ? (
           <AgentSelector onSelect={handleRunAudit} demoMode={demoMode} />
         ) : (
@@ -167,7 +169,7 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-3 px-6 text-center text-[11px] font-mono text-slate-500 bg-agentbreak-darker">
+      <footer className="border-t border-slate-800/40 py-3 px-6 text-center text-[11px] font-mono text-slate-500 bg-agentbreak-darker/50 backdrop-blur z-10">
         AgentBreak • Cold-Start Adaptive Red Teaming & Reliability Engineering for Tool-Using AI Agents
       </footer>
     </div>

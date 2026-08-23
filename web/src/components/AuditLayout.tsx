@@ -75,99 +75,88 @@ export function AuditLayout({
   return (
     <div className="flex flex-col gap-6">
       {/* Top Header / Status Bar */}
-      <div className="flex items-center justify-between border-b border-slate-700 pb-4 flex-wrap gap-4">
+      <div className="glass-panel px-5 py-4 flex items-center justify-between flex-wrap gap-4 rounded-none border-x-0 border-t-0" style={{clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)'}}>
         <div>
-          <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-agentbreak-primary" />
-            <h2 className="text-xl font-bold tracking-tight text-white">
-              Reliability Audit: {preset === 'support' ? 'Customer Support Agent' : 'DevOps Cluster Agent'}
+          <div className="flex items-center gap-3">
+            <Activity className="w-4 h-4 text-agentbreak-primary animate-pulse-glow" />
+            <h2 className="text-sm font-mono font-bold tracking-[0.1em] uppercase text-white">
+              <span className="text-agentbreak-primary/60 mr-2">//</span>
+              {preset === 'support' ? 'SYS.001 Customer Support Agent' : 'SYS.002 DevOps Cluster Agent'}
             </h2>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Audit ID: <span className="text-slate-300">{displayResult?.auditId || 'INITIALIZING_SESSION...'}</span>
+          <p className="text-[11px] text-slate-600 font-mono mt-1 pl-7">
+            AUD:<span className="text-slate-500 ml-1">{displayResult?.auditId || 'INIT_SESSION_PENDING...'}</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Status Badge */}
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-slate-400 font-bold uppercase">STATUS:</span>
-            {state === 'RUNNING' && (
-              <span className="badge bg-amber-950/60 text-amber-400 border border-amber-500/40 animate-pulse uppercase flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                {auditPhase || 'RUNNING ATTACK...'}
-              </span>
-            )}
-            {state === 'AUDIT_COMPLETE' && (
-              <span className="badge bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 uppercase">
-                AUDIT COMPLETED
-              </span>
-            )}
-            {state === 'REPAIR_VERIFYING' && (
-              <span className="badge bg-blue-950/60 text-blue-400 border border-blue-500/40 animate-pulse uppercase flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 animate-spin" />
-                VERIFYING REPAIR...
-              </span>
-            )}
-            {state === 'REPAIR_COMPLETE' && (
-              <span className="badge bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 uppercase flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                REPAIR VERIFIED
-              </span>
-            )}
-            {state === 'ERROR' && (
-              <span className="badge bg-red-950/60 text-red-400 border border-red-500/40 uppercase">
-                AUDIT FAILED
-              </span>
-            )}
+          {state === 'RUNNING' && (
+            <div className="flex items-center gap-2 text-xs font-mono bg-agentbreak-s2/10 border border-agentbreak-s2/40 px-3 py-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 bg-agentbreak-s2 animate-ping shadow-[0_0_6px_rgba(255,204,0,0.8)]" />
+              <span className="text-agentbreak-s2 tracking-[0.12em] uppercase">{auditPhase || 'RUNNING_ATTACK...'}</span>
+            </div>
+          )}
+          {state === 'AUDIT_COMPLETE' && (
+            <div className="flex items-center gap-2 text-xs font-mono bg-agentbreak-s0/10 border border-agentbreak-s0/40 px-3 py-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-agentbreak-s0" />
+              <span className="text-agentbreak-s0 tracking-[0.12em] uppercase">Audit_Complete</span>
+            </div>
+          )}
+          {state === 'REPAIR_VERIFYING' && (
+            <div className="flex items-center gap-2 text-xs font-mono bg-agentbreak-primary/10 border border-agentbreak-primary/40 px-3 py-1.5 animate-pulse">
+              <Zap className="w-3.5 h-3.5 text-agentbreak-primary animate-spin" />
+              <span className="text-agentbreak-primary tracking-[0.12em] uppercase">Verifying_Repair...</span>
+            </div>
+          )}
+          {state === 'REPAIR_COMPLETE' && (
+            <div className="flex items-center gap-2 text-xs font-mono bg-agentbreak-s0/10 border border-agentbreak-s0/40 px-3 py-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-agentbreak-s0" />
+              <span className="text-agentbreak-s0 tracking-[0.12em] uppercase">Repair_Verified</span>
+            </div>
+          )}
+          {state === 'ERROR' && (
+            <div className="flex items-center gap-2 text-xs font-mono bg-agentbreak-s4/10 border border-agentbreak-s4/40 px-3 py-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-agentbreak-s4" />
+              <span className="text-agentbreak-s4 tracking-[0.12em] uppercase">Audit_Failed</span>
+            </div>
+          )}
+
+          <div className="w-px h-4 bg-slate-700/60 hidden sm:block" />
+
+          {/* Mode indicator */}
+          <div className="text-[10px] font-mono text-slate-600 tracking-[0.15em] uppercase">
+            {isFallback ? 'DETERMINISTIC' : <span className="text-agentbreak-primary/60">LIVE LLM</span>}
           </div>
 
-          <div className="h-5 w-px bg-slate-700 hidden sm:block" />
+          <div className="w-px h-4 bg-slate-700/60 hidden sm:block" />
 
-          {/* Mode Badge */}
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-slate-400 font-bold uppercase">MODE:</span>
-            {isFallback ? (
-              <span className="badge bg-slate-800 text-slate-300 border border-slate-700 uppercase">
-                DETERMINISTIC FALLBACK
-              </span>
-            ) : (
-              <span className="badge bg-blue-950/60 text-blue-400 border border-blue-500/40 flex items-center gap-1 uppercase">
-                <Zap className="w-3 h-3 text-blue-400" />
-                LIVE LLM EVALUATION &middot; GEMINI
-              </span>
-            )}
-          </div>
-
-          <div className="h-5 w-px bg-slate-700 hidden sm:block" />
-
-          {/* Run New Audit Action */}
           <button
             onClick={onRunNewAudit}
-            className="flex items-center gap-1.5 text-xs font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded border border-slate-700 transition"
+            className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 hover:text-white bg-agentbreak-darker/50 backdrop-blur border border-slate-700 hover:border-agentbreak-primary hover:shadow-glow-primary px-4 py-2 tracking-wider uppercase transition-all duration-300 rounded-md"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>New Audit</span>
+            <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
+            <span>New_Audit</span>
           </button>
         </div>
       </div>
 
       {/* Error state alert */}
       {state === 'ERROR' && (
-        <div className="bg-red-950/40 border border-red-800 p-4 rounded-lg flex items-center justify-between">
+        <div className="bg-agentbreak-s4/5 border border-agentbreak-s4/50 p-4 flex items-center justify-between shadow-[0_0_20px_rgba(255,0,60,0.1)]" style={{clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)'}}>
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-agentbreak-s4 flex-shrink-0" />
             <div>
-              <h4 className="font-bold text-sm text-red-300 uppercase">Audit Execution Error</h4>
-              <p className="text-xs text-red-200 mt-0.5">{errorMessage || 'An error occurred during audit execution.'}</p>
+              <h4 className="font-mono font-bold text-xs text-agentbreak-s4 uppercase tracking-wider">Audit_Execution_Error</h4>
+              <p className="text-xs text-red-300/70 mt-0.5">{errorMessage || 'An error occurred during audit execution.'}</p>
             </div>
           </div>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="btn-primary text-xs py-1.5 px-3 bg-red-600 hover:bg-red-500"
+              className="text-[11px] font-mono text-agentbreak-s4 border border-agentbreak-s4/50 hover:bg-agentbreak-s4/20 px-4 py-1.5 tracking-wider uppercase transition-all"
             >
-              Retry Audit
+              Retry_Audit
             </button>
           )}
         </div>

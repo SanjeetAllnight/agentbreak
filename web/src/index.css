@@ -6,8 +6,13 @@
   body {
     @apply bg-agentbreak-darker text-slate-300 font-sans antialiased;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-bold text-white tracking-tight;
   }
 }
@@ -16,22 +21,40 @@
   .btn-primary {
     @apply bg-agentbreak-primary text-white font-semibold py-2 px-4 rounded transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-agentbreak-darker;
   }
-  
+
   .btn-secondary {
     @apply bg-agentbreak-panel text-white font-semibold py-2 px-4 rounded border border-slate-600 transition-colors hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-agentbreak-darker;
   }
 
   .panel {
-    @apply bg-agentbreak-panel border border-slate-700 rounded-lg shadow-lg overflow-hidden;
+    @apply bg-agentbreak-panel/70 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-lg overflow-hidden transition-all duration-300;
+  }
+
+  .glass-panel {
+    @apply bg-agentbreak-darker/60 backdrop-blur-lg border border-slate-700/50 rounded-xl shadow-2xl;
   }
 
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
-  
-  .badge-s0 { @apply bg-agentbreak-s0/20 text-agentbreak-s0 border border-agentbreak-s0/30; }
-  .badge-s1 { @apply bg-agentbreak-s1/20 text-agentbreak-s1 border border-agentbreak-s1/30; }
-  .badge-s2 { @apply bg-agentbreak-s2/20 text-agentbreak-s2 border border-agentbreak-s2/30; }
-  .badge-s3 { @apply bg-agentbreak-s3/20 text-agentbreak-s3 border border-agentbreak-s3/30; }
-  .badge-s4 { @apply bg-agentbreak-s4/20 text-agentbreak-s4 border border-agentbreak-s4/30; }
+
+  .badge-s0 {
+    @apply bg-agentbreak-s0/20 text-agentbreak-s0 border border-agentbreak-s0/30;
+  }
+
+  .badge-s1 {
+    @apply bg-agentbreak-s1/20 text-agentbreak-s1 border border-agentbreak-s1/30;
+  }
+
+  .badge-s2 {
+    @apply bg-agentbreak-s2/20 text-agentbreak-s2 border border-agentbreak-s2/30;
+  }
+
+  .badge-s3 {
+    @apply bg-agentbreak-s3/20 text-agentbreak-s3 border border-agentbreak-s3/30;
+  }
+
+  .badge-s4 {
+    @apply bg-agentbreak-s4/20 text-agentbreak-s4 border border-agentbreak-s4/30;
+  }
 }

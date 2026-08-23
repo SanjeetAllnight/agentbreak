@@ -43,82 +43,96 @@ export function AgentSelector({ onSelect, demoMode }: Props) {
         {/* Support Agent Card */}
         <div
           onClick={() => onSelect('support')}
-          className="panel p-6 cursor-pointer hover:border-agentbreak-primary transition-all flex flex-col justify-between group hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] bg-slate-900/90"
+          className="relative group rounded-xl overflow-hidden p-[1px] cursor-pointer hover:-translate-y-1 transition-all duration-300"
         >
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 group-hover:border-agentbreak-primary/50 group-hover:bg-blue-950/40 transition">
-                <Shield className="w-6 h-6 text-agentbreak-primary" />
+          {/* Moving border glow — always on */}
+          <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_340deg,rgba(0,240,255,0.9)_355deg,rgba(59,130,246,1)_360deg)]" />
+          <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] blur-md bg-[conic-gradient(from_0deg,transparent_0deg,transparent_340deg,rgba(0,240,255,0.5)_355deg,rgba(59,130,246,0.7)_360deg)]" />
+
+          {/* Inner Content — solid bg covers center, only 1px border shows the glow */}
+          <div className="relative h-full w-full p-6 flex flex-col justify-between bg-[#0a0d14]/60 backdrop-blur-xl rounded-xl z-10">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 group-hover:border-agentbreak-primary/50 group-hover:bg-blue-950/40 transition">
+                  <Shield className="w-6 h-6 text-agentbreak-primary" />
+                </div>
+                <span className="badge badge-s4 text-[10px]">High Risk Capabilities</span>
               </div>
-              <span className="badge badge-s4 text-[10px]">High Risk Capabilities</span>
+
+              <h2 className="text-lg font-bold text-white mb-1.5 flex items-center justify-between">
+                <span>Customer Support Agent</span>
+              </h2>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                Handles customer accounts, order queries, and financial transactions. Contains vulnerable refund logic.
+              </p>
+
+              <div className="space-y-1.5 pt-3 border-t border-slate-800 font-mono text-[11px] text-slate-400">
+                <div className="flex justify-between">
+                  <span>Tools Exposed:</span>
+                  <span className="text-slate-200">issue_refund, cancel_sub</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Max Risk Severity:</span>
+                  <span className="text-agentbreak-s4 font-bold">S4 (Financial)</span>
+                </div>
+              </div>
             </div>
 
-            <h2 className="text-lg font-bold text-white mb-1.5 flex items-center justify-between">
-              <span>Customer Support Agent</span>
-            </h2>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Handles customer accounts, order queries, and financial transactions. Contains vulnerable refund logic.
-            </p>
-
-            <div className="space-y-1.5 pt-3 border-t border-slate-800 font-mono text-[11px] text-slate-400">
-              <div className="flex justify-between">
-                <span>Tools Exposed:</span>
-                <span className="text-slate-200">issue_refund, cancel_sub</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Max Risk Severity:</span>
-                <span className="text-agentbreak-s4 font-bold">S4 (Financial)</span>
-              </div>
-            </div>
+            <button className="w-full mt-6 flex items-center justify-center gap-2 text-xs font-mono tracking-wider py-2.5 px-4 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 text-blue-300 transition-all duration-300 hover:bg-blue-500/20 hover:border-blue-400/60 hover:text-white hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] group/btn">
+              <span>RUN RELIABILITY AUDIT</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
-
-          <button className="btn-primary w-full mt-6 flex items-center justify-center gap-2 text-xs font-mono tracking-wider">
-            <span>RUN RELIABILITY AUDIT</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </button>
         </div>
 
         {/* DevOps Agent Card */}
         <div
           onClick={() => onSelect('devops')}
-          className="panel p-6 cursor-pointer hover:border-agentbreak-primary transition-all flex flex-col justify-between group hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] bg-slate-900/90"
+          className="relative group rounded-xl overflow-hidden p-[1px] cursor-pointer hover:-translate-y-1 transition-all duration-300"
         >
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 group-hover:border-agentbreak-primary/50 group-hover:bg-blue-950/40 transition">
-                <Server className="w-6 h-6 text-agentbreak-primary" />
+          {/* Moving border glow — always on */}
+          <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_340deg,rgba(0,240,255,0.9)_355deg,rgba(59,130,246,1)_360deg)]" />
+          <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] blur-md bg-[conic-gradient(from_0deg,transparent_0deg,transparent_340deg,rgba(0,240,255,0.5)_355deg,rgba(59,130,246,0.7)_360deg)]" />
+
+          {/* Inner Content — solid bg covers center, only 1px border shows the glow */}
+          <div className="relative h-full w-full p-6 flex flex-col justify-between bg-[#0a0d14]/60 backdrop-blur-xl rounded-xl z-10">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-slate-800 p-3 rounded-lg border border-slate-700 group-hover:border-agentbreak-primary/50 group-hover:bg-blue-950/40 transition">
+                  <Server className="w-6 h-6 text-agentbreak-primary" />
+                </div>
+                <span className="badge badge-s1 text-[10px]">Infrastructure Scope</span>
               </div>
-              <span className="badge badge-s1 text-[10px]">Infrastructure Scope</span>
+
+              <h2 className="text-lg font-bold text-white mb-1.5 flex items-center justify-between">
+                <span>DevOps Cluster Agent</span>
+              </h2>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                Automates cloud worker nodes and container deployments. Has verification policies enforced.
+              </p>
+
+              <div className="space-y-1.5 pt-3 border-t border-slate-800 font-mono text-[11px] text-slate-400">
+                <div className="flex justify-between">
+                  <span>Tools Exposed:</span>
+                  <span className="text-slate-200">deployService, restartServer</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Max Risk Severity:</span>
+                  <span className="text-amber-400 font-bold">S4 (Deployment Gate)</span>
+                </div>
+              </div>
             </div>
 
-            <h2 className="text-lg font-bold text-white mb-1.5 flex items-center justify-between">
-              <span>DevOps Cluster Agent</span>
-            </h2>
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Automates cloud worker nodes and container deployments. Has verification policies enforced.
-            </p>
-
-            <div className="space-y-1.5 pt-3 border-t border-slate-800 font-mono text-[11px] text-slate-400">
-              <div className="flex justify-between">
-                <span>Tools Exposed:</span>
-                <span className="text-slate-200">deployService, restartServer</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Max Risk Severity:</span>
-                <span className="text-amber-400 font-bold">S4 (Deployment Gate)</span>
-              </div>
-            </div>
+            <button className="w-full mt-6 flex items-center justify-center gap-2 text-xs font-mono tracking-wider py-2.5 px-4 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 text-blue-300 transition-all duration-300 hover:bg-blue-500/20 hover:border-blue-400/60 hover:text-white hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] group/btn">
+              <span>RUN RELIABILITY AUDIT</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
-
-          <button className="btn-primary w-full mt-6 flex items-center justify-center gap-2 text-xs font-mono tracking-wider">
-            <span>RUN RELIABILITY AUDIT</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </button>
         </div>
       </div>
 
       {/* Product Loop Pipeline */}
-      <div className="w-full bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400 uppercase tracking-wider overflow-x-auto gap-2">
+      <div className="w-full glass-panel p-4 flex items-center justify-between text-[11px] font-mono text-slate-400 uppercase tracking-wider overflow-x-auto gap-2 bg-slate-900/30">
         <span className="text-blue-400 font-bold">Analyze</span>
         <span className="text-slate-700">→</span>
         <span className="text-red-400 font-bold">Attack</span>

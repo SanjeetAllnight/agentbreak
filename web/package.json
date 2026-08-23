@@ -11,9 +11,16 @@
   },
   "dependencies": {
     "@agentbreak/shared": "*",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "@types/three": "^0.185.4",
+    "clsx": "^2.1.1",
+    "framer-motion": "^13.1.1",
     "lucide-react": "^1.33.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^3.6.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",
