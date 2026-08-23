@@ -249,7 +249,7 @@ The frontend automatically connects to the backend API and WebSocket endpoints.
 
 ## API Reference
 
-The backend exposes several core REST endpoints:
+The backend exposes several core REST endpoints
 
 * `GET /health` - Service health check.
 * `POST /api/audits` - Initiates a new audit run.
@@ -330,7 +330,7 @@ For deployments requiring a persistent database, a `fly.toml` is provided.
 
 ## Security Considerations
 
-* **API Keys:** The Gemini API key remains strictly on the backend. The frontend never possesses secrets.
+* **API Keys:** The Gemini API key remains strictly on a backend. The frontend never possesses secrets.
 * **Sandboxing:** Tool calls are never executed against real external infrastructure.
 * **Candidate Safety:** The repair engine generates a `CandidateAgentConfig`. It never mutates the original `AgentConfig` destructively.
 * **Demo Safety:** Demo mode does not make external network requests or expose any secrets.
